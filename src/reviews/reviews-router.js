@@ -1,5 +1,6 @@
 const express = require('express')
 const path = require('path')
+const { requireAuth } = require('../middleware/basic-auth')
 const ReviewsService = require('./reviews-service')
 
 const reviewsRouter = express.Router()
@@ -7,9 +8,12 @@ const jsonBodyParser = express.json()
 
 reviewsRouter
   .route('/')
+  .all(requireAuth)
   .post(jsonBodyParser, (req, res, next) => {
-    const { thing_id, rating, text, user_id } = req.body
-    const newReview = { thing_id, rating, text, user_id }
+
+    const user_id = req.user.id;
+    const { thing_id, rating, text } = req.body;
+    const newReview = { thing_id, rating, text, user_id };
 
     for (const [key, value] of Object.entries(newReview))
       if (value == null)
@@ -27,7 +31,7 @@ reviewsRouter
           .location(path.posix.join(req.originalUrl, `/${review.id}`))
           .json(ReviewsService.serializeReview(review))
       })
-      .catch(next)
-    })
+      .catch(next);
+  });
 
-module.exports = reviewsRouter
+module.exports = reviewsRouter;
